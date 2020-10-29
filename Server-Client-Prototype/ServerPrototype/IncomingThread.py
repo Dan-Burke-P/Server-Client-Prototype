@@ -4,6 +4,7 @@ import threading
 from queue import Queue
 from socket import socket
 from MessagePack import MessagePack, MsgType, get_bytes, Header
+from QueueMessage import QueueMessage
 
 
 class IncomingThread(threading.Thread):
@@ -54,7 +55,9 @@ class IncomingThread(threading.Thread):
 
             msg_pck.raw_data = get_bytes(data_length, self.connection)
 
-            self.inc_queue.put(msg_pck)
+            queue_message = QueueMessage(node_origin=self.name,
+                                         msg_package=msg_pck)
+            self.inc_queue.put(queue_message)
 
         self.break_down()
 

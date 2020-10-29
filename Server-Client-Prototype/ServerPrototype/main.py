@@ -4,6 +4,8 @@ import struct
 from _thread import *
 from queue import Queue, Empty
 import time
+
+from MessageProcessorThread import MessageProcessorThread
 from NodeConnection import NodeConnection, NodeStatus
 from IncomingThread import IncomingThread
 
@@ -15,12 +17,16 @@ if __name__ == '__main__':
     active_connections = 0
     # The name of the central server
     central_server_name = "cs-1"
+    # The landing spot for all the incoming messages
+    inc_messages = Queue()
+    # setup our message listener queue
+    msg_worker = MessageProcessorThread(inc_messages)
+    msg_worker.start()
 
 
 # This thread will broker the connection and exchange details
 # Returns a NodeConnection containing all the information
 def hand_shake(connection: socket.socket, node_connection: NodeConnection):
-
     # Send the packed up length of the servers name to the client
     connection.send(
         struct.pack(
@@ -75,21 +81,13 @@ def start_listening_server():
                 # Try to accept new connections
                 client_socket, address = s.accept()
                 # A connection is accepted so create a new node connection
-                node_conn = NodeConnection()
+                node_conn = NodeConnection(inc_messages)
                 # Append this to our list of node connections
                 node_list.append(node_conn)
                 # Start a new handshake thread so we can set that up while we wait for another connection
                 start_new_thread(hand_shake, (client_socket, node_conn,))
 
             except socket.timeout:
-                # Can be used to kill the process if we need to
-                if len(node_list) > 0:
-                    node: NodeConnection = node_list[0]
-                    try:
-                        tmp = node.incoming_queue.get(block=False)
-                    except Empty:
-                        print("Nothing to get here")
-                    print(tmp)
                 continue
             print("\nConnection established\n\n")
 

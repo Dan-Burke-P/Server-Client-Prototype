@@ -20,11 +20,11 @@ class NodeStatus(Enum):
 # connection
 
 class NodeConnection:
-    def __init__(self):
+    def __init__(self, inc_messages):
         # Holds data that needs to be sent
         self.outgoing_queue: Queue = Queue()
         # Holds data the has come in
-        self.incoming_queue: Queue = Queue()
+        self.incoming_queue = inc_messages
 
         # Holds the incoming threads PID
         self.incoming_thread = -1
